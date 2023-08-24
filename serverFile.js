@@ -113,8 +113,8 @@ app.get("/shops", function (req, res, next) {
     connData.query(query, function (err, result) {
       if (err) res.status(404).send(err);
       else {
-        result.rows = filterParam(result.rows, "productid", product, Data.products);
-        result.rows = filterParam2(result.rows, "shopid", shop, Data.shops);
+        result.rows = filterParam(result.rows, "productid", product);
+        result.rows = filterParam2(result.rows, "shopid", shop);
         if(sort==="QtyAsc") result.rows.sort((st1,st2) => st1.quantity-st2.quantity);
         if(sort==="QtyDesc") result.rows.sort((st1,st2) => st2.quantity-st1.quantity);
         if(sort==="ValueAsc") result.rows.sort((st1,st2) => (st1.price*st1.quantity)-(st2.price*st2.quantity));
@@ -129,21 +129,17 @@ app.get("/shops", function (req, res, next) {
     console.log(arr2);
     let valuesArr = values.split(",");
     console.log(valuesArr);
-    let ar = arr2.filter((a1) => valuesArr.find((val) => val === a1.productName));
-    console.log(ar);
-    let arr1 = arr.filter((a1) => ar.find((val) => val.productId === a1[nam]));
+    let arr1 = arr.filter((a1) => valuesArr.find((val) => +(val.substring(2, )) === a1[nam]));
     console.log(arr1);
     return arr1;
   };
 
-  let filterParam2 = (arr, nam, values, arr2) => {
+  let filterParam2 = (arr, nam, values) => {
     if (!values) return arr;
-    console.log(arr2);
-    let valuesArr = values.split(",");
-    console.log(valuesArr);
-    let ar = arr2.filter((a1) => valuesArr.find((val) => val === a1.name));
-    console.log(ar);
-    let arr1 = arr.filter((a1) => ar.find((val) => val.shopId === a1[nam]));
+    console.log(arr,nam,values);
+    let id = values.substring(2, );
+    console.log(id)
+    let arr1 = arr.filter((a1) => a1.shopid === +(id));
     console.log(arr1);
     return arr1;
   };
@@ -186,7 +182,7 @@ app.get("/shops", function (req, res, next) {
     console.log("Inside /totalPurchases/shop/:id get api");
     let id = +req.params.id;
     let values = [id];
-    let sql = `SELECT productid, sum(quantity) as totalQuantity, price * quantity as value FROM purchases WHERE shopid = $1 GROUP BY productid, price, quantity ORDER BY productid ASC`;
+    let sql = `SELECT productid, sum(quantity) as totalQuantity, sum(price * quantity) as value FROM purchases WHERE shopid = $1 GROUP BY productid ORDER BY productid ASC`;
     connData.query(sql, values, function (err, result) {
       if (err) res.status(404).send(err);
       else res.send(result.rows);
@@ -197,7 +193,7 @@ app.get("/shops", function (req, res, next) {
     console.log("Inside /totalPurchases/product/:id get api");
     let id = +req.params.id;
     let values = [id];
-    let sql = `SELECT shopid, sum(quantity) as totalQuantity, price * quantity as value FROM purchases WHERE productid = $1 GROUP BY shopid, price, quantity ORDER BY shopid ASC`;
+    let sql = `SELECT shopid, sum(quantity) as totalQuantity, sum(price * quantity) as value FROM purchases WHERE productid = $1 GROUP BY shopid ORDER BY shopid ASC`;
     connData.query(sql, values, function (err, result) {
       if (err) res.status(404).send(err);
       else res.send(result.rows);
